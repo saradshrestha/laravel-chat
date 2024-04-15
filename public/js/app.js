@@ -23511,9 +23511,8 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   props: ['user'],
   setup: function setup(props) {
-    var message = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)([]);
+    var messages = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)([]);
     var newMessage = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)('');
-    var hasScrolledToBottom = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)('');
     (0,vue__WEBPACK_IMPORTED_MODULE_0__.onMounted)(function () {
       fetchMessages();
     });
@@ -23521,24 +23520,35 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       scrollBottom();
     });
     Echo["private"]('chat').listen('MessageSentEvent', function (e) {
-      message.value.push({
+      messages.value.push({
+        id: e.message.id,
         message: e.message.message,
         user: e.user
       });
     });
     var fetchMessages = /*#__PURE__*/function () {
       var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
+        var res;
         return _regeneratorRuntime().wrap(function _callee$(_context) {
           while (1) switch (_context.prev = _context.next) {
             case 0:
-              axios__WEBPACK_IMPORTED_MODULE_1___default().get('/messages').then(function (res) {
-                message.value = res.data;
-              });
-            case 1:
+              _context.prev = 0;
+              _context.next = 3;
+              return axios__WEBPACK_IMPORTED_MODULE_1___default().get('/messages');
+            case 3:
+              res = _context.sent;
+              messages.value = res.data;
+              _context.next = 10;
+              break;
+            case 7:
+              _context.prev = 7;
+              _context.t0 = _context["catch"](0);
+              console.error('Error fetching messages:', _context.t0);
+            case 10:
             case "end":
               return _context.stop();
           }
-        }, _callee);
+        }, _callee, null, [[0, 7]]);
       }));
       return function fetchMessages() {
         return _ref.apply(this, arguments);
@@ -23546,7 +23556,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
     }();
     var addMessage = /*#__PURE__*/function () {
       var _ref2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2() {
-        var user_message;
+        var user_message, res;
         return _regeneratorRuntime().wrap(function _callee2$(_context2) {
           while (1) switch (_context2.prev = _context2.next) {
             case 0:
@@ -23554,16 +23564,26 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
                 user: props.user,
                 message: newMessage.value
               };
-              message.value.push(user_message);
-              axios__WEBPACK_IMPORTED_MODULE_1___default().post('/message/store', user_message).then(function (res) {
-                console.log(response.data);
-              });
+              messages.value.push(user_message);
+              _context2.prev = 2;
+              _context2.next = 5;
+              return axios__WEBPACK_IMPORTED_MODULE_1___default().post('/message/store', user_message);
+            case 5:
+              res = _context2.sent;
+              console.log(res.data);
+              _context2.next = 12;
+              break;
+            case 9:
+              _context2.prev = 9;
+              _context2.t0 = _context2["catch"](2);
+              console.error('Error adding message:', _context2.t0);
+            case 12:
               newMessage.value = '';
-            case 4:
+            case 13:
             case "end":
               return _context2.stop();
           }
-        }, _callee2);
+        }, _callee2, null, [[2, 9]]);
       }));
       return function addMessage() {
         return _ref2.apply(this, arguments);
@@ -23571,16 +23591,15 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
     }();
     var scrollBottom = function scrollBottom() {
       if (messages.value.length > 1) {
-        var el = hasScrolledToBottom.value;
-        el.scrollTop = el.scrolHeight;
+        var el = document.querySelector('.card-body');
+        el.scrollTop = el.scrollHeight;
       }
     };
     return {
       messages: messages,
       newMessage: newMessage,
       addMessage: addMessage,
-      fetchMessages: fetchMessages,
-      hasScrolledToBottom: hasScrolledToBottom
+      fetchMessages: fetchMessages
     };
   }
 });
@@ -23614,41 +23633,39 @@ var _hoisted_4 = {
 };
 var _hoisted_5 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
   "class": "card-header"
-}, "Chat ", -1 /* HOISTED */);
+}, "Chat", -1 /* HOISTED */);
 var _hoisted_6 = {
   "class": "card-body"
 };
 var _hoisted_7 = {
-  "class": "message message-received"
+  "class": "primary-font"
 };
 var _hoisted_8 = {
-  "class": "primary-font"
-};
-var _hoisted_9 = {
-  "class": "message message-send"
-};
-var _hoisted_10 = {
-  "class": "primary-font"
-};
-var _hoisted_11 = {
   "class": "chat-form input-group"
 };
-var _hoisted_12 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-  "class": "form-control",
-  type: "text",
-  name: "message",
-  placeholder: "Send Message"
-}, null, -1 /* HOISTED */);
-var _hoisted_13 = {
+var _hoisted_9 = {
   "class": "input-group-btn"
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
   return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_4, [_hoisted_5, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.messages, function (message) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", _hoisted_8, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(message.user.name), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(message.message), 1 /* TEXT */)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_9, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", _hoisted_10, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(message.user.name), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(message.message), 1 /* TEXT */)])])], 64 /* STABLE_FRAGMENT */);
-  }), 256 /* UNKEYED_FRAGMENT */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_11, [_hoisted_12, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_13, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+      key: message.id,
+      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)({
+        'message-received': message.user.id !== $props.user.id,
+        'message-sent': message.user.id === $props.user.id
+      })
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("strong", _hoisted_7, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(message.user.name), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(message.message), 1 /* TEXT */)])], 2 /* CLASS */);
+  }), 128 /* KEYED_FRAGMENT */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    "class": "form-control",
+    type: "text",
+    "onUpdate:modelValue": _cache[0] || (_cache[0] = function ($event) {
+      return $setup.newMessage = $event;
+    }),
+    placeholder: "Send Message"
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $setup.newMessage]]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_9, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     "class": "btn btn-primary",
     id: "btn-chat",
-    onClick: _cache[0] || (_cache[0] = function () {
+    onClick: _cache[1] || (_cache[1] = function () {
       return $setup.addMessage && $setup.addMessage.apply($setup, arguments);
     })
   }, "Send")])])])])])])]);
@@ -23667,7 +23684,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
 /* harmony import */ var _components_ChatComponent_vue__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./components/ChatComponent.vue */ "./resources/js/components/ChatComponent.vue");
 __webpack_require__(/*! ./bootstrap */ "./resources/js/bootstrap.js");
-
 
 
 var app = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createApp)({});

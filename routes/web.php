@@ -14,15 +14,18 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+
+
 Route::get('/', function () {
     return view('welcome');
 });
 
 Auth::routes();
-
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-Route::get('/chat', [App\Http\Controllers\HomeController::class, 'chat'])->name('chat');
-Route::get('/messages', [App\Http\Controllers\HomeController::class, 'messages'])->name('messages');
-Route::post('/message/store', [App\Http\Controllers\HomeController::class, 'messageStore'])->name('messageStore');
+Route::middleware(['corsMiddleware','auth'])->group(function () {
+    Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');   
+    Route::get('/chat', [App\Http\Controllers\HomeController::class, 'chat'])->name('chat');
+    Route::get('/messages', [App\Http\Controllers\HomeController::class, 'messages'])->name('messages');
+    Route::post('/message/store', [App\Http\Controllers\HomeController::class, 'messageStore'])->name('messageStore'); 
+});
 
 

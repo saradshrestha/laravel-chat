@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\SendMessageEvent;
 use App\Models\Message;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,7 +17,7 @@ class HomeController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth');
+        // $this->middleware('auth');
     }
 
     /**
@@ -41,13 +42,14 @@ class HomeController extends Controller
 
     public function messageStore(Request $request)
     {
-        $user = Auth::user();
+       
+        $user = User::where('id',Auth::id())->with('messages')->first();
 
         $messages = $user->messages()->create([
             'message' => $request->message
         ]);
        
-        broadcast(new SendMessageEvent($user,$message))->toOthers();
+        broadcast(new SendMessageEvent($user,$messages))->toOthers();
         return "message sent";
     }
     

@@ -3,35 +3,21 @@
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card">
-                    <div class="card-header">Chat </div>
+                    <div class="card-header">Chat</div>
 
                     <div class="card-body">
-                        <template v-for="message in messages">
-                            <div class="message message-received">
-                                <p>
+                        <div v-for="message in messages" :key="message.id" :class="{'message-received': message.user.id !== user.id, 'message-sent': message.user.id === user.id}">
+                            <p>
                                 <strong class="primary-font">
                                     {{ message.user.name }}
                                 </strong>
                                 {{ message.message }}
                             </p>
-
-                            </div>
-                            <div class="message message-send">
-                                <p>
-                                <strong class="primary-font">
-                                    {{ message.user.name }}
-                                </strong>
-                                {{ message.message }}
-                            </p>
-
-                            </div>
-                            
-                        </template>
+                        </div>
                         <div class="chat-form input-group">
-                            <input class="form-control" type="text" name="message" placeholder="Send Message">
+                            <input class="form-control" type="text" v-model="newMessage" placeholder="Send Message">
                             <span class="input-group-btn">
-                                <button class="btn btn-primary" id="btn-chat"
-                                    @click="addMessage">Send</button>
+                                <button class="btn btn-primary" id="btn-chat" @click="addMessage">Send</button>
                             </span>
                         </div>
                     </div>
@@ -42,64 +28,69 @@
 </template>
 
 <script>
-    import { reactive,inject,ref,onMounted,onUpdated } from 'vue';
-    import axios from 'axios';
-    export default {
-        props:['user'],
-        setup(props){
-            let message = ref([])
-            let newMessage = ref('')
-            let hasScrolledToBottom = ref('')
-            onMounted(() => {
-                fetchMessages()
-            })
+import { reactive, inject, ref, onMounted, onUpdated } from 'vue';
+import axios from 'axios';
 
-            onUpdated(() => {
-                scrollBottom()
-            })
+export default {
+    props: ['user'],
+    setup(props) {
+        const messages = ref([]);
+        const newMessage = ref('');
 
-            Echo.private('chat').listen('MessageSentEvent',(e)=>{
-                message.value.push({
-                    message: e.message.message,
-                    user: e.user
-                });
-            })
+        onMounted(() => {
+            fetchMessages();
+        });
 
-            const fetchMessages = async()=>{
-                axios.get('/messages').then(res => {
-                    message.value = res.data;
-                });
+        onUpdated(() => {
+            scrollBottom();
+        });
+
+        Echo.private('chat').listen('MessageSentEvent', (e) => {
+            messages.value.push({
+                id: e.message.id,
+                message: e.message.message,
+                user: e.user
+            });
+        });
+
+        const fetchMessages = async () => {
+            try {
+                const res = await axios.get('/messages');
+                messages.value = res.data;
+            } catch (error) {
+                console.error('Error fetching messages:', error);
             }
+        };
 
-            const addMessage = async()=>{
-                let user_message = {
-                    user: props.user,
-                    message: newMessage.value
-                }
-                
-                message.value.push(user_message);
-                axios.post('/message/store',user_message).then(res => {
-                    console.log(response.data);
-                });
-                newMessage.value=''
-            }
+        const addMessage = async () => {
+            const user_message = {
+                user: props.user,
+                message: newMessage.value
+            };
 
-            const scrollBottom= () => {
-                if(messages.value.length > 1){
-                    let el = hasScrolledToBottom.value;
-                    el.scrollTop = el.scrolHeight;
-                }
+            messages.value.push(user_message);
+            try {
+                const res = await axios.post('/message/store', user_message);
+                console.log(res.data);
+            } catch (error) {
+                console.error('Error adding message:', error);
             }
-            
-            return {
-                messages,
-                newMessage,
-                addMessage,
-                fetchMessages,
-                hasScrolledToBottom
+            newMessage.value = '';
+        };
 
+        const scrollBottom = () => {
+            if (messages.value.length > 1) {
+                const el = document.querySelector('.card-body');
+                el.scrollTop = el.scrollHeight;
             }
-        }
-       
+        };
+
+        return {
+            messages,
+            newMessage,
+            addMessage,
+            fetchMessages
+        };
     }
+};
 </script>
