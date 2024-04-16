@@ -35,6 +35,16 @@ class HomeController extends Controller
         return view('chat');
     }
 
+    public function getUsers(){
+        return User::with('messages')->get();
+    }
+
+    public function chatUser()
+    {
+        return view('chatUser');
+    }
+
+
     public function messages()
     {
         return Message::with('user')->get();
@@ -42,15 +52,15 @@ class HomeController extends Controller
 
     public function messageStore(Request $request)
     {
-       
         $user = User::where('id',Auth::id())->with('messages')->first();
 
-        $messages = $user->messages()->create([
-            'message' => $request->message
-        ]);
-       
-        broadcast(new SendMessageEvent($user,$messages))->toOthers();
-        return "message sent";
+        $message = new Message();
+        $message->user_id = $user->id;
+        $message->message = $request->message;
+        $message->save();
+
+        $event  = event(new SendMessageEvent($message,$user));
+        return true;
     }
     
 }

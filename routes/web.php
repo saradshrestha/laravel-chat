@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\PublicMessageEvent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -21,9 +22,22 @@ Route::get('/', function () {
 });
 
 Auth::routes();
+
+Route::get('/public-chat', function() {
+        broadcast(new PublicMessageEvent());
+        return true;
+    })
+    ->name('home'); 
+
+
+
+
 Route::middleware(['corsMiddleware','auth'])->group(function () {
     Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');   
     Route::get('/chat', [App\Http\Controllers\HomeController::class, 'chat'])->name('chat');
+    Route::get('/getUsers', [App\Http\Controllers\HomeController::class, 'getUsers'])->name('getUsers');
+    
+    Route::get('/chat/{user_id}', [App\Http\Controllers\HomeController::class, 'chatUser'])->name('chatUser');
     Route::get('/messages', [App\Http\Controllers\HomeController::class, 'messages'])->name('messages');
     Route::post('/message/store', [App\Http\Controllers\HomeController::class, 'messageStore'])->name('messageStore'); 
 });
