@@ -22,5 +22,9 @@ Broadcast::channel('private.chat', function () {
     return Auth::check();
 });
 
+Broadcast::channel('chatroom.{id}', function ($user, $id) {
+    return true;
+});
+
 
 

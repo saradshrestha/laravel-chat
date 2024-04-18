@@ -4,7 +4,7 @@
 <div class="container">
     <div class="row justify-content-center">
        
-        <chatuser :user="{{ Auth::user() }}" />
+        <Chatroom :user="{{ $user }}" :room_id = "{{$room_id}}" :messages ="{{ $messages}}" />
            
     </div>
 </div>

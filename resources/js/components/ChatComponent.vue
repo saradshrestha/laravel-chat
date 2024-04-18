@@ -8,8 +8,8 @@
                     <div class="card-body">
                         <div v-for="user in users" :key="user.id" >
                             <p>
-                                <a :href="'chat/' + user.id" class="primary-font">
-                                    {{user.name }}
+                                <a :href="'chat-room/' + user.id" class="primary-font">
+                                    {{user }}
                                 </a>
                                
                             </p>
