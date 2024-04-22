@@ -45,10 +45,12 @@ class PrivateMessageEvent implements ShouldBroadcast
     public function broadcastWith()
     {
         return [
+
             'id'=>$this->fromId,
             'name'=>$this->user,
             'message'=>$this->message,
             'status'=>$this->status,
+
         ];
     }
 }

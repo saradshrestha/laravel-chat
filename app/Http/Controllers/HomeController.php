@@ -89,37 +89,35 @@ class HomeController extends Controller
     // }
 
     public function sendMessage(Request $request){
-        // dd($request->all());
+
         $fromId = auth()->user()->id;
-        $toUserId = $request->to_user_id;
-        $message = $request->message;
         $status = 1;
-        $user = auth()->user()->name;
-        $id = $request->room_id;
-    
+        $msg = $request->message;
+        $room_id =$request->room_id;
         $save_message = Message::create([
-            'message'=>$message,
-            'from_id'=>$fromId,
-            'to_id'=>$toUserId,
-            'chat_id'=>$id,
-            // 'is_readed'=>1,
+            'message'=>$request->message,
+            'from_id'=>Auth::id(),
+            'to_id'=>$request->to_user_id,
+            'chat_id'=>$request->room_id,
+
         ]);
-        dd($save_message);
-        event(new PrivateMessageEvent($message,$user,$id,$fromId,$status));
+        
+        $user = auth()->user()->name;
+        event(new PrivateMessageEvent( $msg ,$user,$room_id,$fromId,$status));
         return true;
     }
 
     //show room by user
-    public function show_room($id){
+    public function show_room($user_id){
         //update auth user status to be online 
         $authUser = User::where('id',Auth::id())
                         ->with('chatRooms')
                         ->first();
   
-        $user = User::where('id',$id)
-                ->with('chatRooms')
-                ->first();
-        
+        $user = User::where('id',$user_id)
+                    ->with('chatRooms')
+                    ->first();
+        $chatRoom="";
         if($authUser->chatRooms->count() > 0){
             foreach($authUser->chatRooms as $chatRoom){
                 $chatRoom = $this->checkUserInChatRoom($chatRoom,$user);
@@ -134,14 +132,9 @@ class HomeController extends Controller
             $chatRoom->users()->attach([$user->id,$authUser->id]);
         }
 
-        // $chatRoom = Chat::whereHas('users',function($q){
-        //         $q->whereIn('id',[$user->id])
-        // });
-
-
-
-           
-          
+       $chatRoom = Chat::whereHas('users', function($q) use ($user,$authUser){
+                $q->whereIn('user_id',[$user->id,$authUser]);
+            })->first();
 
         return view('chatRoom',[
             'user'=> $user, 
@@ -152,6 +145,7 @@ class HomeController extends Controller
   
     //update message status to => is_readed 
     public function read_all_messages(Request $request){
+        // dd('askdjl');
         $to_id = $request->toId;
         $room_id = $request->roomId;
         $update = Message::where([

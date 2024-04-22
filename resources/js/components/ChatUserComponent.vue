@@ -1,3 +1,5 @@
+
+<!-- Not Needed for chat room system. -->
 <template>
     <div class="container">
         <div class="row justify-content-center">
@@ -27,7 +29,7 @@
     </div>
 </template>
 
-<script>
+<!-- <script>
 import { reactive, inject, ref, onMounted, onUpdated } from 'vue';
 import axios from 'axios';
 
@@ -45,8 +47,8 @@ export default {
             // scrollBottom();
         });
 
-        Echo.private('private.chat').listen('.Chat-Msg', (e) => {
-            console.log(e, 'Chages');
+        Echo.private('private.chat.').listen('.Chat-Msg', (e) => {
+            console.log(e,'Chages');
             messages.value.push({
                 id: e.message.id,
                 message: e.message.message,
@@ -88,4 +90,4 @@ export default {
         };
     }
 };
-</script>
+</script> -->

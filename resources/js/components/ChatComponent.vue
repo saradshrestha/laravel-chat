@@ -1,3 +1,4 @@
+<!-- Required for chat room system as well as for global -->
 <template>
     <div class="container">
         <div class="row justify-content-center">
