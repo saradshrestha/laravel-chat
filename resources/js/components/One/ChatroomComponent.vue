@@ -7,19 +7,31 @@
                     <div class="card-header d-flex justify-content-between">
                        <span>Chat User: {{ user.name }}</span> 
                        <span>Chat Room : {{room_id }}</span>
-                       {{ authUser.name }}
                     </div>
 
-                    <div class="card-body">
-                        <div v-for="message in messages" :key="message.id" class="message-body">
-                            <p v-if="message.from.id == authUser.id" class="right">
-                                <strong class="primary-font">
-                                    {{ message.from.name }}
-                                </strong><br>
-                                {{ message.message }}
-                            </p>
+                    <div class="card-body" style="">
+                        <div class="view-height">
+                            <div v-for="message in messages" :key="message.id" class="message-body">
+                               
+                                <div v-if="loggeduser.id !== message.from.id" class="left">
+                                    <strong >
+                                            {{  user.name  }}
+                                        </strong><br>
+                                    <span class="primary-font card">
+                                       
+                                        {{ message.message }}
+                                    </span>
+                                </div>
+                                <div v-else class="right  mt-2">
+                                    <div class="card">
+                                        <span class="">
+                                            {{ message.message }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="chat-form input-group">
+                        <div class="chat-form input-group mt-4">
                             <input class="form-control" type="text" v-model="newMessage" placeholder="Send Message">
                             <span class="input-group-btn">
                                 <button class="btn btn-primary" id="btn-chat" @click="addMessage">Send</button>
@@ -37,27 +49,30 @@ import { reactive, inject, ref, onMounted, onUpdated } from 'vue';
 import axios from 'axios';
 
 export default {
-    props: ['user','room_id','message','authUser'],
+
+    props: {
+        loggeduser: Object,
+        room_id: Number,
+        messages: Array,
+        user: Object
+    },
 
     setup(props) {
-        const isActive = ref(false);
+        // const isActive = ref(false);
 
         const messages = ref([]);
         const newMessage = ref('');
         
-        console.log(props.authUser);
         onMounted(() => {
+            console.log(props,'props');
             fetchMessages();
         });
 
         Echo.private('message.'+props.room_id).listen('.chatroom-message', (e) => {
-            console.log(e, 'Chages');
+            console.log(e, 'Channel message');
             messages.value.push({
-                id: e.id,
                 message: e.message,
-
-                // $user,$id,$fromId,$status
-                user: e.name
+                from: e.from_id
             });
         });
       
@@ -67,6 +82,7 @@ export default {
                 const res = await axios.get('/get-all-messages/'+props.room_id);
                
                 messages.value = res.data;
+                console.log(res.data,"fetchMessages");
             } catch (error) {
                 console.error('Error fetching messages:', error);
             }
@@ -85,8 +101,6 @@ export default {
             };
             try {
                 const res = await axios.post('/chat-room/send-message', user_message);
-                messages.value.push(user_message);
-                // console.log(res.data);
             } catch (error) {
                 console.error('Error adding message:', error);
             }
@@ -104,11 +118,55 @@ export default {
 </script>
 
 <style scoped>
-.message-body p.left{
+
+.message-body{
+    margin: 10px;
+}
+.message-body .left{
     text-align: left;
+    /* padding-right:10px; */
+    width: 50%;
+
 } 
 
-.message-body p.right{
-    text-align: right;
+.message-body .left .card{
+    margin-right: auto !important;
+    background: rgb(51, 174, 162);
+    width: fit-content;
+    padding: 2px 6px 2px 6px;
+}
+
+.message-body .left span{
+    padding-right:10px;
+    background: rgb(51, 174, 162);
+    margin-right: auto;
 } 
+
+.message-body .right{
+    text-align: right;
+    /* padding-right:10px; */
+    width: 50%;
+    /* background: red; */
+    margin-left: auto;
+} 
+
+.message-body .right .card{
+    margin-left: auto !important;
+    background: rgb(51, 174, 162);
+    width: fit-content;
+    padding: 2px 0px 2px 6px;
+}
+
+.message-body .right span{
+    padding-right:10px;
+    background: rgb(51, 174, 162);
+    margin-left: auto;
+} 
+
+.view-height{
+    overflow-y: scroll;
+    height:65vh;
+}
+
+
 </style>

@@ -12,21 +12,11 @@ use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
     public function __construct()
     {
         // $this->middleware('auth');
     }
 
-    /**
-     * Show the application dashboard.
-     *
-     * @return \Illuminate\Contracts\Support\Renderable
-     */
     public function index()
     {
         return view('home');
@@ -38,78 +28,16 @@ class HomeController extends Controller
     }
 
     public function getUsers(){
-        // $authUser = User::where('id',Auth::id())
-        //             ->with('chatRooms')
-        //             ->first();
-
         $users = User::where('id','!=',Auth::id())
                     ->with('chatRooms')
                     ->get();
-        
-        // foreach($users as $user){
-           
-        //     foreach($authUser->chatRooms as $chatRoom){
-        //         if($chatRoom->user_id != $user->id){
-        //             $chatRoom = Chat::create(['title' => $user->name]);
-        //             $chat->users()->create([
-        //                 'user_id' => $user->id
-        //             ]);
-        //         }
-        //     }
-        // }
-        // $users = $user->refresh();
-
-
         return $users;
-
     }
 
-    // public function chatUser()
-    // {
-    //     return view('chatUser');
-    // }
+   
 
-
-    // public function messages()
-    // {
-    //     return Message::with('user')->get();
-    // }
-
-    // public function messageStore(Request $request)
-    // {
-    //     $user = User::where('id',Auth::id())->with('messages')->first();
-
-    //     $message = new Message();
-    //     $message->user_id = $user->id;
-    //     $message->message = $request->message;
-    //     $message->save();
-
-    //     $event  = event(new SendMessageEvent($message,$user));
-    //     return true;
-    // }
-
-    public function sendMessage(Request $request){
-
-        $fromId = auth()->user()->id;
-        $status = 1;
-        $msg = $request->message;
-        $room_id =$request->room_id;
-        $save_message = Message::create([
-            'message'=>$request->message,
-            'from_id'=>Auth::id(),
-            'to_id'=>$request->to_user_id,
-            'chat_id'=>$request->room_id,
-
-        ]);
-        
-        $user = auth()->user()->name;
-        event(new PrivateMessageEvent( $msg ,$user,$room_id,$fromId,$status));
-        return true;
-    }
-
-    //show room by user
+    //show room by user Important
     public function show_room($user_id){
-        //update auth user status to be online 
         $authUser = User::where('id',Auth::id())
                         ->with('chatRooms')
                         ->first();
@@ -136,38 +64,49 @@ class HomeController extends Controller
                 $q->whereIn('user_id',[$user->id,$authUser]);
             })->first();
 
+
         return view('chatRoom',[
             'user'=> $user, 
             'room_id'=>$chatRoom->id,
-            'messages'=>$chatRoom->messages
+            'messages'=>$chatRoom->messages?? null,
+            'authUser' =>$authUser->id
+
         ]);
     }
-  
-    //update message status to => is_readed 
-    public function read_all_messages(Request $request){
-        // dd('askdjl');
-        $to_id = $request->toId;
-        $room_id = $request->roomId;
-        $update = Message::where([
-            ['chat_id',$room_id],
-            ['from_id',auth()->user()->id],
-            ['to_id',$to_id],
-            ['is_readed',0],
-        ])->update([
-            'is_readed'=>1
+
+
+    public function sendMessage(Request $request){
+        $fromId = auth()->user();
+        $status = 1;
+        $msg = $request->message;
+        $room_id =$request->room_id;
+        $save_message = Message::with('from')->create([
+            'message'=>$request->message,
+            'from_id' => Auth::id(),
+            'to_id'=>$request->to_user_id,
+            'chat_id'=>$request->room_id,
         ]);
-        return null;
+
+        $save_message->from = $fromId;
+
+        // $message = Message::where('id',$save_message->id)->with('from')->first();
+            
+        event(new PrivateMessageEvent($msg,$room_id,$fromId,$status));
+        return true;
     }
+
+
+   
 
 
     public function getAllMessages($room_id){
-        $room = Message::where('chat_id',$room_id)
-                    ->with('from','to')->get();
-        if($room){
-            return $room;
+        $messages = Message::where('chat_id',$room_id)
+                        ->with('from')
+                        ->get();
+        if($messages){
+            return $messages;
         }
         return [];
-
     }
 
 
@@ -184,6 +123,23 @@ class HomeController extends Controller
 
     }
 
+
+
+
+     // public function read_all_messages(Request $request){
+    //     // dd('askdjl');
+    //     $to_id = $request->toId;
+    //     $room_id = $request->roomId;
+    //     $update = Message::where([
+    //         ['chat_id',$room_id],
+    //         ['from_id',auth()->user()->id],
+    //         ['to_id',$to_id],
+    //         ['is_readed',0],
+    //     ])->update([
+    //         'is_readed'=>1
+    //     ]);
+    //     return null;
+    // }
 
     
 
