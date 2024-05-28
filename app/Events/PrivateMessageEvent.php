@@ -13,22 +13,19 @@ class PrivateMessageEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $message;
-    public $user;
-    public $roomId;
-    public $fromId;
-    public $status;
+    public $message, $roomId, $from, $message_id,$read_at;
 
-    public function __construct($message,$roomId,$fromId,$status)
+    public function __construct($message,$roomId,$from,$message_id,$read_at)
     {
         $this->message = $message;
-        // $this->user = $user;
         $this->roomId = $roomId;
-        $this->fromId = $fromId;
-        $this->status = $status;
+        $this->from = $from;
+        $this->message_id = $message_id;
+        $this->read_at = $read_at;
+
     }
 
-   
+
     public function broadcastOn()
     {
         return new PrivateChannel('message.'.$this->roomId);
@@ -42,10 +39,10 @@ class PrivateMessageEvent implements ShouldBroadcast
     public function broadcastWith()
     {
         return [
-            'from_id'=>$this->fromId,
-            'user'=>$this->user,
+            'from'=>$this->from,
             'message'=>$this->message,
-            'status'=>$this->status,
+            'id'=>$this->message_id,
+            'read_at'=>$this->read_at,
         ];
     }
 }

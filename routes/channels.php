@@ -18,11 +18,16 @@ use Illuminate\Support\Facades\Broadcast;
 //     return (int) $user->id === (int) $id;
 // });
 
-Broadcast::channel('private.chat', function () {
-    return Auth::check();
+// Broadcast::channel('private.chat', function () {
+//     return Auth::check();
+// });
+
+
+Broadcast::channel('message.{chatroom_id}', function ($user, $id) {
+    return true;
 });
 
-Broadcast::channel('message.{id}', function ($user, $id) {
+Broadcast::channel('message-seen.{chatroom_id}', function ($user, $id) {
     return true;
 });
 

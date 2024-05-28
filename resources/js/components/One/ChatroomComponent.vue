@@ -5,28 +5,32 @@
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between">
-                       <span>Chat User: {{ user.name }}</span> 
+                       <span>Chat User: {{ user.name }}</span>
                        <span>Chat Room : {{room_id }}</span>
                     </div>
 
                     <div class="card-body" style="">
                         <div class="view-height">
                             <div v-for="message in messages" :key="message.id" class="message-body">
-                               
+
                                 <div v-if="loggeduser.id !== message.from.id" class="left">
                                     <strong >
                                             {{  user.name  }}
                                         </strong><br>
                                     <span class="primary-font card">
-                                       
+
                                         {{ message.message }}
                                     </span>
+                                    <span v-if="message.read_at" class="seen">Seen</span>
+                                    <span v-else="message.read_at" class="seen">Not Seen</span>
                                 </div>
                                 <div v-else class="right  mt-2">
                                     <div class="card">
                                         <span class="">
                                             {{ message.message }}
                                         </span>
+                                        <span v-if="message.read_at" class="seen">Seen</span>
+                                        <span v-else="message.read_at" class="seen">Not Seen</span>
                                     </div>
                                 </div>
                             </div>
@@ -45,7 +49,7 @@
 </template>
 
 <script>
-import { reactive, inject, ref, onMounted, onUpdated } from 'vue';
+import { ref, onMounted } from 'vue';
 import axios from 'axios';
 
 export default {
@@ -58,29 +62,44 @@ export default {
     },
 
     setup(props) {
-        // const isActive = ref(false);
 
         const messages = ref([]);
         const newMessage = ref('');
-        
+
         onMounted(() => {
-            console.log(props,'props');
             fetchMessages();
+
+            console.log('mount');
         });
 
         Echo.private('message.'+props.room_id).listen('.chatroom-message', (e) => {
             console.log(e, 'Channel message');
             messages.value.push({
                 message: e.message,
-                from: e.from_id
+                id: e.id,
+                from: e.from,
+                read_at: e.read_at
+            });
+
+            if(props.loggeduser.id !== e.from.id){
+                markMessagesAsSeen(e.id);
+            }
+        });
+
+        Echo.private('message-seen.'+props.room_id).listen('.chatroom-message-seen', (e) => {
+            console.log(e, 'Channel message Seen');
+            console.log(messages, 'from event');
+
+            messages.value.filter(function (message, index) {
+                if (message.id === e.message_id) {
+                    message.read_at = e.read_at
+                }
             });
         });
-      
 
         const fetchMessages = async () => {
             try {
                 const res = await axios.get('/get-all-messages/'+props.room_id);
-               
                 messages.value = res.data;
                 console.log(res.data,"fetchMessages");
             } catch (error) {
@@ -88,17 +107,20 @@ export default {
             }
         };
 
-
-
         const addMessage = async () => {
             const user_id = props.user.id;
             const room_id = props.room_id;
             const user_message = {
                 message: newMessage.value,
                 to_user_id:  user_id,
-                // status: 1,
-                room_id : room_id              
+                room_id : room_id
             };
+
+            if(newMessage.value == null || newMessage.value == ''){
+                alert('message is required.');
+                return;
+            }
+
             try {
                 const res = await axios.post('/chat-room/send-message', user_message);
             } catch (error) {
@@ -107,11 +129,28 @@ export default {
             newMessage.value = '';
         };
 
+        const markMessagesAsSeen = async (message_id) => {
+            // for (let message of messages) {
+                // if (!message.read_at) {
+                     try {
+                        const res = await axios.post('/chat-room/mark-as-seen/'+props.room_id,{
+                                message_id: message_id
+                            });
+                        // message.read_at = new Date().toISOString(); // Optimistic update
+
+                    } catch (error) {
+                        console.error('Failed to mark message as seen:', error);
+                    }
+                // }
+            // }
+        };
+
         return {
             messages,
             newMessage,
             addMessage,
-            fetchMessages
+            fetchMessages,
+            markMessagesAsSeen
         };
     }
 };
@@ -127,7 +166,11 @@ export default {
     /* padding-right:10px; */
     width: 50%;
 
-} 
+}
+
+.seen{
+    font-size: 10px;
+}
 
 .message-body .left .card{
     margin-right: auto !important;
@@ -140,7 +183,7 @@ export default {
     padding-right:10px;
     background: rgb(51, 174, 162);
     margin-right: auto;
-} 
+}
 
 .message-body .right{
     text-align: right;
@@ -148,7 +191,7 @@ export default {
     width: 50%;
     /* background: red; */
     margin-left: auto;
-} 
+}
 
 .message-body .right .card{
     margin-left: auto !important;
@@ -161,7 +204,7 @@ export default {
     padding-right:10px;
     background: rgb(51, 174, 162);
     margin-left: auto;
-} 
+}
 
 .view-height{
     overflow-y: scroll;

@@ -7,15 +7,21 @@
                     <div class="card-header">Chat User</div>
 
                     <div class="card-body">
-                        <div v-for="user in users" :key="user.id" >
-                            <p>
-                                <a :href="'chat-room/' + user.id" class="primary-font">
-                                    {{user }}
+                        <div v-for="user in users" :key="user.id">
+                            <div v-if="user.chat_rooms && user.chat_rooms.length > 0">
+                                <div v-for="room in user.chat_rooms" :key="room.id">
+                                    <a :href="'chat-room/' + user.id + '/' + room.id" class="primary-font">
+                                        <span>{{ room.title }}</span>
+                                        <span v-if="room.unread_messages_count > 0">{{ room.unread_messages_count }}</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <div v-else>
+                                <a :href="'chat-room/create/' + user.id" class="primary-font">
+                                    <h5>{{ user.name }}</h5> <!-- Assuming user has a 'name' property -->
                                 </a>
-                               
-                            </p>
+                            </div>
                         </div>
-                      
                     </div>
                 </div>
             </div>
@@ -46,7 +52,7 @@ export default {
             }
         };
 
-      
+
 
         return {
             users,

@@ -1,6 +1,6 @@
 
 <!-- Not Needed for chat room system. -->
-<template>
+<!-- <template>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-8">
@@ -18,16 +18,16 @@
                         </div>
                         <div class="chat-form input-group">
                             <input class="form-control" type="text" v-model="newMessage" placeholder="Send Message">
-                            <span class="input-group-btn">
+                            <!-- <span class="input-group-btn">
                                 <button class="btn btn-primary" id="btn-chat" @click="addMessage">Send</button>
-                            </span>
+                            </span> -->
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</template>
+</template> -->
 
 <!-- <script>
 import { reactive, inject, ref, onMounted, onUpdated } from 'vue';
@@ -71,7 +71,7 @@ export default {
                 message: newMessage.value
             };
 
-           
+
             try {
                 const res = await axios.post('/message/store', user_message);
                 messages.value.push(user_message);

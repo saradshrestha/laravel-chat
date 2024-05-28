@@ -21,4 +21,10 @@ class Chat extends Model
     public function messages(){
         return $this->hasMany(Message::class,'chat_id')->orderBy('created_at');
     }
+
+    public function unreadMessages(){
+        return $this->hasMany(Message::class,'chat_id')
+                    ->where('read_at',null)
+                    ->orderBy('created_at');
+    }
 }

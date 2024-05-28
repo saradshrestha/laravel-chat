@@ -2,13 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\MessageSeenEvent;
 use App\Events\PrivateMessageEvent;
 use App\Events\SendMessageEvent;
 use App\Models\Chat;
+use App\Models\ChatRoomUser;
 use App\Models\Message;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+
+use function PHPUnit\Framework\isEmpty;
 
 class HomeController extends Controller
 {
@@ -29,81 +34,108 @@ class HomeController extends Controller
 
     public function getUsers(){
         $users = User::where('id','!=',Auth::id())
-                    ->with('chatRooms')
+                    ->with(['chatRooms'=>function($q){
+                        $q->withCount('unreadMessages');
+                    }])
                     ->get();
         return $users;
     }
 
-   
-
     //show room by user Important
-    public function show_room($user_id){
+    public function show_room($user_id,$room_id){
         $authUser = User::where('id',Auth::id())
                         ->with('chatRooms')
                         ->first();
-  
+
         $user = User::where('id',$user_id)
                     ->with('chatRooms')
                     ->first();
-        $chatRoom="";
-        if($authUser->chatRooms->count() > 0){
-            foreach($authUser->chatRooms as $chatRoom){
-                $chatRoom = $this->checkUserInChatRoom($chatRoom,$user);
-            }
-        }elseif($user->chatRooms->count() > 0){
-            foreach($user->chatRooms as $chatRoom){
-                $chatRoom = $this->checkUserInChatRoom($chatRoom,$authUser);
-            }
 
-        }else{
+        // if($authUser->chatRooms->count() > 0){
+        //     foreach($authUser->chatRooms as $chatRoom){
+        //         $chatRoom = $this->checkUserInChatRoom($chatRoom,$user);
+        //     }
+        // }elseif($user->chatRooms->count() > 0){
+        //     foreach($user->chatRooms as $chatRoom){
+        //         $chatRoom = $this->checkUserInChatRoom($chatRoom,$authUser);
+        //     }
+        // }
+
+        $chatRoom = Chat::where('id',$room_id)->with('messages')->first();
+        if(!$chatRoom){
             $chatRoom = Chat::create(['title' => $user->name]);
             $chatRoom->users()->attach([$user->id,$authUser->id]);
         }
 
-       $chatRoom = Chat::whereHas('users', function($q) use ($user,$authUser){
-                $q->whereIn('user_id',[$user->id,$authUser]);
-            })->first();
-
-
         return view('chatRoom',[
-            'user'=> $user, 
+            'user'=> $user,
             'room_id'=>$chatRoom->id,
             'messages'=>$chatRoom->messages?? null,
             'authUser' =>$authUser->id
-
         ]);
+
+
+    }
+
+    public function createChatRoom($user_id){
+        $authUser = User::where('id',Auth::id())
+                ->with('chatRooms')
+                ->first();
+
+        $user = User::where('id',$user_id)
+                ->with('chatRooms')
+                ->first();
+
+        $usersInSameRoom = ChatRoomUser::whereIn('user_id',[$authUser,$user_id])
+                            ->pluck('chat_room_id')
+                            ->unique();
+        // dd($usersInSameRoom);
+        if($usersInSameRoom->isEmpty()){
+            // dd($usersInSameRoom);
+            $chatRoom = Chat::create(['title' => $user->name]);
+            $chatRoom->users()->attach([$user->id,$authUser->id]);
+        }else{
+            // dd($usersInSameRoom,"else");
+            $chatRoom = Chat::where('id',$usersInSameRoom)->first();
+        }
+
+        return view('chatRoom',[
+            'user'=> $user,
+            'room_id'=>$chatRoom->id,
+            'messages'=>$chatRoom->messages?? null,
+            'authUser' =>$authUser->id
+        ]);
+
     }
 
 
     public function sendMessage(Request $request){
         $fromId = auth()->user();
-        $status = 1;
         $msg = $request->message;
         $room_id =$request->room_id;
-        $save_message = Message::with('from')->create([
-            'message'=>$request->message,
-            'from_id' => Auth::id(),
-            'to_id'=>$request->to_user_id,
-            'chat_id'=>$request->room_id,
-        ]);
+        if($request->message){
+            $save_message = Message::with('from')->create([
+                'message'=>$request->message,
+                'from_id' => Auth::id(),
+                'to_id'=>$request->to_user_id,
+                'chat_id'=>$request->room_id,
+            ]);
 
-        $save_message->from = $fromId;
+            event(new PrivateMessageEvent($msg,$room_id,$fromId,$save_message->id,$save_message->read_at));
+            return true;
+        }
+        return false;
 
-        // $message = Message::where('id',$save_message->id)->with('from')->first();
-            
-        event(new PrivateMessageEvent($msg,$room_id,$fromId,$status));
-        return true;
     }
-
-
-   
 
 
     public function getAllMessages($room_id){
         $messages = Message::where('chat_id',$room_id)
                         ->with('from')
+                        ->oldest()
                         ->get();
         if($messages){
+            $this->markMessagesAsSeen($messages);
             return $messages;
         }
         return [];
@@ -125,6 +157,37 @@ class HomeController extends Controller
 
 
 
+public function markAsSeen(Request $request, $chatRoom_id)
+{
+
+    $request->validate(['message_id' => 'required|integer']);
+    $message = Message::where('chat_id', $chatRoom_id)
+                      ->where('id', $request->message_id)
+                      ->first();
+
+    $message->read_at = now();
+    $message->save();
+
+    event(new MessageSeenEvent($message));
+
+    return response()->json(['message' => 'Message marked as seen.']);
+}
+
+
+
+
+    protected function markMessagesAsSeen($messages)
+    {
+        $userId = auth()->user()->id;
+        foreach ($messages as $message) {
+            if (!$message->read_at && $message->from_id !== $userId) {
+                $message->read_at = Carbon::now();
+                $message->save();
+
+                event(new MessageSeenEvent($message));
+            }
+        }
+    }
 
      // public function read_all_messages(Request $request){
     //     // dd('askdjl');
@@ -141,9 +204,9 @@ class HomeController extends Controller
     //     return null;
     // }
 
-    
 
 
-    
-    
+
+
+
 }
